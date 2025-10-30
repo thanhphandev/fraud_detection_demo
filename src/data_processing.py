@@ -169,7 +169,7 @@ def get_resampling_info(y_original, y_resampled, method_name):
     }
 
 
-def process_data_by_method(method, X_train, X_test, y_train, y_test):
+def process_data_by_method(method, X_train, y_train):
     """
     Xử lý dữ liệu theo phương pháp được chọn.
     

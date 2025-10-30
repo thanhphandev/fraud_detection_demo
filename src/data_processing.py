@@ -67,6 +67,12 @@ def prepare_data(df, test_size=0.2, random_state=42):
     """
     Chuẩn bị dữ liệu: tách features và target, chuẩn hóa dữ liệu.
     
+    Theo bài báo:
+    - Cột Time được loại bỏ (không sử dụng)
+    - Cột Amount được chuẩn hóa
+    - Các cột V1-V28 đã được PCA nên KHÔNG cần chuẩn hóa lại
+    - Chuẩn hóa được thực hiện TRƯỚC khi chia train/test
+    
     Args:
         df (pd.DataFrame): DataFrame chứa dữ liệu
         test_size (float): Tỷ lệ dữ liệu test
@@ -75,21 +81,28 @@ def prepare_data(df, test_size=0.2, random_state=42):
     Returns:
         tuple: (X_train, X_test, y_train, y_test)
     """
-    # Tách features và target
-    X = df.drop('Class', axis=1)
-    y = df['Class']
+    # Tạo bản sao để không ảnh hưởng đến dataframe gốc
+    df_processed = df.copy()
     
-    # Chia dữ liệu train/test
+    # Bước 1: Chuẩn hóa cột Amount TRƯỚC khi chia dữ liệu
+    scaler = StandardScaler()
+    df_processed['Amount'] = scaler.fit_transform(df_processed['Amount'].values.reshape(-1, 1))
+    
+    # Bước 2: Loại bỏ cột Time (theo bài báo)
+    df_processed = df_processed.drop('Time', axis=1)
+    
+    # Bước 3: Tách features và target
+    X = df_processed.drop('Class', axis=1)
+    y = df_processed['Class']
+    
+    # Bước 4: Chia dữ liệu train/test
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=test_size, random_state=random_state, stratify=y
     )
     
-    # Chuẩn hóa dữ liệu (nếu cần thiết, tùy thuộc vào mô hình)
-    # Lưu ý: Dữ liệu đã được PCA transform nên có thể không cần scale thêm
-    # Nhưng để đảm bảo tính nhất quán, ta vẫn scale
-    scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_test = scaler.transform(X_test)
+    # Chuyển về numpy array để phù hợp với các hàm xử lý tiếp theo
+    X_train = X_train.values
+    X_test = X_test.values
     
     return X_train, X_test, y_train, y_test
 

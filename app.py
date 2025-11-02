@@ -6,7 +6,6 @@
 - Chọn một hoặc nhiều mô hình ML để huấn luyện và so sánh
 - Xem kết quả chi tiết và so sánh hiệu suất các mô hình
 
-Ngày tạo: 2025
 Phiên bản Python: 3.11
 """
 
@@ -212,7 +211,7 @@ if run_button:
         # Lấy thông tin dữ liệu gốc
         data_info = get_data_info(df)
         
-        # Chuẩn bị dữ liệu (chia train/test)
+        # Chuẩn bị dữ liệu (chia train/test) (80/20)
         X_train, X_test, y_train, y_test = prepare_data(df)
         
         # Xử lý dữ liệu theo phương pháp đã chọn
@@ -307,11 +306,16 @@ if run_button:
     
     # Thêm ghi chú
     st.caption("""
-    **Ghi chú:** 
-    - **TP (True Positive):** Giao dịch gian lận được phát hiện đúng - Càng cao càng tốt
-    - **FP (False Positive):** Giao dịch hợp pháp bị nhận diện nhầm - Càng thấp càng tốt
-    - **TN (True Negative):** Giao dịch hợp pháp được phát hiện đúng
-    - **FN (False Negative):** Giao dịch gian lận bị bỏ sót - Càng thấp càng tốt
+    **📌 Giải thích Metrics:**
+    
+    **Confusion Matrix:**
+    - ✅ **TP**: Bắt đúng gian lận | ❌ **FP**: Báo nhầm (oan) | ✅ **TN**: Nhận đúng hợp pháp | ❌ **FN**: Bỏ sót gian lận
+    
+    **Chỉ số đánh giá:**
+    - **Precision** = TP/(TP+FP) → Khi báo "gian lận", đúng bao nhiêu %? (↓ FP)
+    - **Recall** = TP/(TP+FN) → Bắt được bao nhiêu % gian lận thực tế? (↓ FN)  
+    - **F1-Score** → Cân bằng Precision & Recall (quan trọng nhất với dữ liệu mất cân bằng)
+    - **Accuracy** → % dự đoán đúng tổng thể (⚠️ không tin cậy khi dữ liệu mất cân bằng)
     """)
     
     st.markdown("---")
@@ -333,8 +337,7 @@ if run_button:
         st.markdown("---")
     
     # Khuyến nghị
-    recommendation = get_recommendation(trained_models, data_processing_method)
-    st.markdown(recommendation)
+    get_recommendation(trained_models, data_processing_method)
     
     # Footer
     st.markdown("---")
@@ -342,7 +345,7 @@ if run_button:
     <div style='text-align: center; color: #888; padding: 2rem;'>
         <p>Đồ án: Phát hiện Gian lận Thẻ Tín dụng bằng Machine Learning</p>
         <p>Dataset: Credit Card Fraud Detection - Kaggle</p>
-        <p>Công nghệ: Python 3.14 | Streamlit | Scikit-learn | Imbalanced-learn</p>
+        <p>Công nghệ: Python 3.11 | Streamlit | Scikit-learn | Imbalanced-learn</p>
     </div>
     """, unsafe_allow_html=True)
 

@@ -210,49 +210,143 @@ def display_data_info(data_info, method_info):
 
 def get_recommendation(models, method_name):
     """
-    Đưa ra khuyến nghị dựa trên kết quả các mô hình.
+    Hiển thị khuyến nghị trực quan dựa trên kết quả các mô hình.
     
     Args:
         models (list): Danh sách các FraudDetectionModel
         method_name (str): Tên phương pháp xử lý dữ liệu
-        
-    Returns:
-        str: Chuỗi chứa khuyến nghị
     """
     if not models:
-        return "Không có mô hình nào được đánh giá."
+        st.warning("Không có mô hình nào được đánh giá.")
+        return
     
-    # Tìm mô hình tốt nhất dựa trên F1-score
+    # Tìm các mô hình tốt nhất theo từng tiêu chí
     best_model = max(models, key=lambda m: m.metrics['f1_score'])
-    
-    # Tìm mô hình có TP cao nhất
     best_tp_model = max(models, key=lambda m: m.metrics['true_positive'])
-    
-    # Tìm mô hình có FP thấp nhất
     best_fp_model = min(models, key=lambda m: m.metrics['false_positive'])
     
-    recommendation = f"""
-    ### Khuyến nghị
+    st.subheader("📊 Phân tích & Khuyến nghị")
     
-    Dựa trên kết quả phân tích với phương pháp **{method_name}**:
+    # Hiển thị phương pháp xử lý
+    st.info(f"**Phương pháp xử lý dữ liệu:** {method_name}")
     
-    - **Mô hình tổng thể tốt nhất (F1-Score):** **{best_model.model_name}** 
-      - F1-Score: {best_model.metrics['f1_score']*100:.2f}%
-      - True Positive: {best_model.metrics['true_positive']}
-      - False Positive: {best_model.metrics['false_positive']}
+    # Tạo 3 cột cho 3 tiêu chí đánh giá
+    col1, col2, col3 = st.columns(3)
     
-    - **Mô hình phát hiện gian lận tốt nhất (TP cao nhất):** **{best_tp_model.model_name}**
-      - True Positive: {best_tp_model.metrics['true_positive']}
+    with col1:
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                    padding: 20px; border-radius: 10px; color: white; text-align: center;'>
+            <h4 style='margin: 0; color: white;'>🏆 Tổng thể tốt nhất</h4>
+            <p style='margin: 5px 0; font-size: 0.9em;'>Dựa trên F1-Score</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(f"**Mô hình:** {best_model.model_name}")
+        st.metric("F1-Score", f"{best_model.metrics['f1_score']*100:.2f}%")
+        
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.metric("TP", f"{best_model.metrics['true_positive']:,}", 
+                     help="True Positive - Gian lận phát hiện đúng")
+        with col_b:
+            st.metric("FP", f"{best_model.metrics['false_positive']:,}",
+                     help="False Positive - Nhận diện nhầm")
     
-    - **Mô hình ít nhận diện nhầm nhất (FP thấp nhất):** **{best_fp_model.model_name}**
-      - False Positive: {best_fp_model.metrics['false_positive']}
+    with col2:
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); 
+                    padding: 20px; border-radius: 10px; color: white; text-align: center;'>
+            <h4 style='margin: 0; color: white;'>🎯 Phát hiện tốt nhất</h4>
+            <p style='margin: 5px 0; font-size: 0.9em;'>True Positive cao nhất</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(f"**Mô hình:** {best_tp_model.model_name}")
+        st.metric("True Positive", f"{best_tp_model.metrics['true_positive']:,}")
+        
+        col_c, col_d = st.columns(2)
+        with col_c:
+            st.metric("Recall", f"{best_tp_model.metrics['recall']*100:.2f}%",
+                     help="Tỷ lệ phát hiện gian lận")
+        with col_d:
+            st.metric("F1", f"{best_tp_model.metrics['f1_score']*100:.2f}%")
     
-    **Kết luận:** Mô hình **{best_model.model_name}** kết hợp với phương pháp **{method_name}** 
-    cho ra kết quả cân bằng tốt nhất giữa khả năng phát hiện gian lận (True Positive) 
-    và tỷ lệ nhận diện nhầm (False Positive).
+    with col3:
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
+                    padding: 20px; border-radius: 10px; color: white; text-align: center;'>
+            <h4 style='margin: 0; color: white;'>✨ Chính xác nhất</h4>
+            <p style='margin: 5px 0; font-size: 0.9em;'>False Positive thấp nhất</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(f"**Mô hình:** {best_fp_model.model_name}")
+        st.metric("False Positive", f"{best_fp_model.metrics['false_positive']:,}")
+        
+        col_e, col_f = st.columns(2)
+        with col_e:
+            st.metric("Precision", f"{best_fp_model.metrics['precision']*100:.2f}%",
+                     help="Độ chính xác khi dự đoán gian lận")
+        with col_f:
+            st.metric("F1", f"{best_fp_model.metrics['f1_score']*100:.2f}%")
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Kết luận với highlight
+    conclusion_text = f"""
+    <div style='background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); 
+                padding: 20px; border-radius: 10px; border-left: 5px solid #ff6b6b;'>
+        <h4 style='margin-top: 0; color: #2d3436;'>💡 Kết luận</h4>
+        <p style='font-size: 1.05em; line-height: 1.6; color: #2d3436; margin-bottom: 0;'>
+            Mô hình <strong style='color: #d63031;'>{best_model.model_name}</strong> kết hợp với 
+            phương pháp <strong style='color: #d63031;'>{method_name}</strong> cho ra kết quả 
+            <strong>cân bằng tốt nhất</strong> giữa khả năng phát hiện gian lận (True Positive) 
+            và tỷ lệ nhận diện nhầm (False Positive).
+        </p>
+    </div>
     """
     
-    return recommendation
+    st.markdown(conclusion_text, unsafe_allow_html=True)
+    
+    # Thêm insights nếu có sự khác biệt giữa các mô hình
+    if len(models) > 1:
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        with st.expander("📈 Phân tích chi tiết và đề xuất"):
+            if best_model.model_name != best_tp_model.model_name:
+                st.warning(f"""
+                **Lưu ý:** Mô hình **{best_tp_model.model_name}** phát hiện được nhiều gian lận hơn 
+                ({best_tp_model.metrics['true_positive']} so với {best_model.metrics['true_positive']}), 
+                nhưng có thể có nhiều cảnh báo giả hơn ({best_tp_model.metrics['false_positive']} FP).
+                
+                **Đề xuất:** Nếu ưu tiên phát hiện tối đa gian lận và chấp nhận một số cảnh báo giả, 
+                hãy xem xét sử dụng **{best_tp_model.model_name}**.
+                """)
+            
+            if best_model.model_name != best_fp_model.model_name:
+                st.info(f"""
+                **Ghi chú:** Mô hình **{best_fp_model.model_name}** có số lượng cảnh báo giả thấp nhất 
+                ({best_fp_model.metrics['false_positive']} FP), phù hợp nếu cần giảm thiểu phiền hà cho khách hàng.
+                
+                **Đề xuất:** Nếu ưu tiên trải nghiệm khách hàng và giảm số lần từ chối nhầm giao dịch hợp pháp,
+                hãy xem xét **{best_fp_model.model_name}**.
+                """)
+            
+            # So sánh performance
+            f1_scores = [m.metrics['f1_score'] for m in models]
+            f1_diff = (max(f1_scores) - min(f1_scores)) * 100
+            
+            if f1_diff < 1:
+                st.success(f"""
+                ✅ **Kết quả ổn định:** Các mô hình có hiệu suất tương đương nhau (chênh lệch F1-Score < 1%). 
+                Có thể chọn bất kỳ mô hình nào tùy theo tiêu chí ưu tiên (tốc độ, tài nguyên, khả năng giải thích).
+                """)
+            else:
+                st.warning(f"""
+                ⚠️ **Chênh lệch đáng kể:** F1-Score chênh lệch {f1_diff:.2f}% giữa các mô hình. 
+                Nên chọn mô hình có hiệu suất cao nhất cho production.
+                """)
 
 
 def create_detailed_metrics_table(models):

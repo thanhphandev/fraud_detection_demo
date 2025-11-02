@@ -1,6 +1,3 @@
-# Requirements cho ứng dụng Phát hiện Gian lận Thẻ Tín dụng
-# Python version: 3.14 hoặc tương thích
-
 # Thư viện giao diện web
 streamlit>=1.28.0
 

@@ -17,28 +17,57 @@ import streamlit as st
 
 
 # URL dữ liệu công khai - Credit Card Fraud Detection từ Kaggle
-# Lưu ý: Bạn có thể sử dụng link raw từ GitHub hoặc tải về trước
 DATA_URL = "https://raw.githubusercontent.com/nsethi31/Kaggle-Data-Credit-Card-Fraud-Detection/master/creditcard.csv"
 
 
 @st.cache_data
 def load_data():
     """
-    Tải dữ liệu Credit Card Fraud Detection từ nguồn công khai.
+    Tải dữ liệu Credit Card Fraud Detection.
+    
+    Thứ tự ưu tiên:
+    1. Tải từ file local (data/creditcard.csv)
+    2. Nếu không có, tải từ URL công khai
     
     Returns:
         pd.DataFrame: DataFrame chứa dữ liệu giao dịch thẻ tín dụng
     """
+    # Thử tải từ file local trước
     try:
         base_dir = os.path.dirname(os.path.dirname(__file__))
         file_path = os.path.join(base_dir, "data", "creditcard.csv")
-
-        df = pd.read_csv(file_path)
-        return df
+        
+        if os.path.exists(file_path):
+            placeholder = st.empty()
+            placeholder.info("📂 Đang tải dữ liệu từ file local...")
+            df = pd.read_csv(file_path)
+            placeholder.success(f"✅ Đã tải {len(df):,} giao dịch từ file local")
+            return df
+        else:
+            raise FileNotFoundError("File local không tồn tại")
+            
     except Exception as e:
-        st.error(f"Lỗi khi tải dữ liệu: {e}")
-        st.info("Bạn có thể tải dữ liệu thủ công từ Kaggle: https://www.kaggle.com/mlg-ulb/creditcardfraud")
-        return None
+        # Fallback: Tải từ URL
+        try:
+            placeholder = st.empty()
+            placeholder.warning(f"⚠️ Không tìm thấy file local. Đang tải từ URL...")
+            df = pd.read_csv(DATA_URL)
+            placeholder.empty()  # Xóa thông báo warning
+            
+            # Tùy chọn: Lưu file về local để lần sau dùng
+            try:
+                os.makedirs(os.path.join(base_dir, "data"), exist_ok=True)
+                df.to_csv(file_path, index=False)
+                st.success(f"✅ Đã tải {len(df):,} giao dịch từ URL và lưu vào file local")
+            except:
+                st.success(f"✅ Đã tải {len(df):,} giao dịch từ URL")
+            
+            return df
+            
+        except Exception as url_error:
+            st.error(f"❌ Lỗi khi tải dữ liệu từ URL: {url_error}")
+            st.info("💡 Bạn có thể tải dữ liệu thủ công từ Kaggle: https://www.kaggle.com/mlg-ulb/creditcardfraud")
+            return None
 
 
 def get_data_info(df):
@@ -67,7 +96,6 @@ def prepare_data(df, test_size=0.2, random_state=42):
     """
     Chuẩn bị dữ liệu: tách features và target, chuẩn hóa dữ liệu.
     
-    Theo bài báo:
     - Cột Time được loại bỏ (không sử dụng)
     - Cột Amount được chuẩn hóa
     - Các cột V1-V28 đã được PCA nên KHÔNG cần chuẩn hóa lại

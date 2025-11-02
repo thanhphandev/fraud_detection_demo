@@ -111,6 +111,7 @@ fraud_detection_demo/
 
 ```bash
 # Nếu có Git
+git clone https://github.com/thanhphandev/fraud_detection_demo.git
 cd fraud_detection_demo
 
 # Hoặc tải file ZIP và giải nén
@@ -278,7 +279,7 @@ Actual  0      TN   FP
 | Accuracy | ~99.4% |
 | Precision | ~22% |
 | Recall | ~95% |
-| F1-Score | ~36% |
+| F1-Score | ~16% |
 
 **Giải thích**:
 - Mô hình phát hiện được 95% giao dịch gian lận (Recall cao)
